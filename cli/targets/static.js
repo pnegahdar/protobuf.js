@@ -362,8 +362,7 @@ function buildType(ref, type) {
             var prop = util.safeProp(field.name); // either .name or ["name"]
             prop = prop.substring(1, prop.charAt(0) === "[" ? prop.length - 1 : prop.length);
             var jsType = toJsType(field);
-            if (field.optional)
-                jsType = jsType + "|null";
+            field.optional = ["number", "number|long", "boolean", "string", "Uint8Array"].indexOf(jsType) === -1; // Optional if non primitive
             typeDef.push("@property {" + jsType + "} " + (field.optional ? "[" + prop + "]" : prop) + " " + (field.comment || type.name + " " + field.name));
         });
         push("");
@@ -378,7 +377,7 @@ function buildType(ref, type) {
         "@classdesc " + (type.comment || "Represents " + aOrAn(type.name) + "."),
         config.comments ? "@implements " + escapeName("I" + type.name) : null,
         "@constructor",
-        "@param {" + exportName(type, true) + "=} [" + (config.beautify ? "properties" : "p") + "] Properties to set"
+        "@param {DeepPartial<" + exportName(type, true) + ">=} [" + (config.beautify ? "properties" : "p") + "] Properties to set"
     ]);
     buildFunction(type, type.name, Type.generateConstructor(type));
 
@@ -391,7 +390,7 @@ function buildType(ref, type) {
             push("");
             var jsType = toJsType(field);
             if (field.optional && !field.map && !field.repeated && field.resolvedType instanceof Type)
-                jsType = jsType + "|null|undefined";
+                jsType = jsType + "|undefined";
             pushComment([
                 field.comment || type.name + " " + field.name + ".",
                 "@member {" + jsType + "} " + field.name,
@@ -451,7 +450,7 @@ function buildType(ref, type) {
             "@function create",
             "@memberof " + exportName(type),
             "@static",
-            "@param {" + exportName(type, true) + "=} [properties] Properties to set",
+            "@param {DeepPartial<" + exportName(type, true) + ">=} [properties] Properties to set",
             "@returns {" + exportName(type) + "} " + type.name + " instance"
         ]);
         push(escapeName(type.name) + ".create = function create(properties) {");
@@ -468,7 +467,7 @@ function buildType(ref, type) {
             "@function encode",
             "@memberof " + exportName(type),
             "@static",
-            "@param {" + exportName(type, !config.forceMessage) + "} " + (config.beautify ? "message" : "m") + " " + type.name + " message or plain object to encode",
+            "@param {DeepPartial<" + exportName(type, !config.forceMessage) + ">} " + (config.beautify ? "message" : "m") + " " + type.name + " message or plain object to encode",
             "@param {$protobuf.Writer} [" + (config.beautify ? "writer" : "w") + "] Writer to encode to",
             "@returns {$protobuf.Writer} Writer"
         ]);
@@ -481,7 +480,7 @@ function buildType(ref, type) {
                 "@function encodeDelimited",
                 "@memberof " + exportName(type),
                 "@static",
-                "@param {" + exportName(type, !config.forceMessage) + "} message " + type.name + " message or plain object to encode",
+                "@param {DeepPartial<" + exportName(type, !config.forceMessage) + ">} message " + type.name + " message or plain object to encode",
                 "@param {$protobuf.Writer} [writer] Writer to encode to",
                 "@returns {$protobuf.Writer} Writer"
             ]);

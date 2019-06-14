@@ -154,7 +154,20 @@ exports.main = function(args, callback) {
             output.push(
                 "import * as Long from \"long\";",
                 ""
-            );               
+            );
+            const deepPartial =
+`
+type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends Array<infer U>
+    ? Array<DeepPartial<U>>
+    : T[P] extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : DeepPartial<T[P]>
+};
+
+`
+            output.push(...deepPartial.split('\n'))
+
             if (argv.global)
                 output.push(
                     "export as namespace " + argv.global + ";",
